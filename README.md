@@ -3,15 +3,15 @@ author: dzh-ma
 date: 2025-03-14
 ---
 
-# PlainScript
+# lexica
 
-PlainScript is an programming language designed to be easy to read & learn.
+lexica is an programming language designed to be easy to read & learn.
 The syntax closely mirrors plain English, making coding approachable
     for all users.
 
 ## Vision
 
-PlainScript aims to bridge the gap between natural language & programming.
+lexica aims to bridge the gap between natural language & programming.
 This would enable users to express logic clearly without complex syntax.
 
 ## Features
@@ -24,7 +24,7 @@ This would enable users to express logic clearly without complex syntax.
 
 ## Example Code
 
-```PlainScript
+```lexica
 Let b mean 12.
 Let bs list b, 1, 2, 3.
 
