@@ -5,9 +5,8 @@ date: 2025-03-14
 
 # lexica
 
-lexica is an programming language designed to be easy to read & learn.
-The syntax closely mirrors plain English, making coding approachable
-    for all users.
+lexica is a programming language designed to be easy to read & learn.
+The syntax closely mirrors plain English, making coding approachable for all users.
 
 ## Vision
 
