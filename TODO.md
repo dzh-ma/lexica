@@ -5,8 +5,8 @@ date: 2025-03-27
 
 # Compiler/Interpreter Implementation
 
-- [ ] Complete `token.zig` with all lexical token definitions
-- [ ] Implement `lexer.zig` to properly tokenize lexica syntax
+- [x] Complete `token.zig` with all lexical token definitions
+- [x] Implement `lexer.zig` to properly tokenize lexica syntax
 - [ ] Develop `ast.zig` with node structures for all language features
 - [ ] Build `parser.zig` to create correct AST from tokens
 - [ ] Implement `environment.zig` for variable scope management
