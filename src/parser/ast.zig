@@ -107,3 +107,133 @@ pub const Expression = union (enum) {
         }
     }
 };
+
+// concrete AST nodes
+
+// root node of every AST
+pub const Program = struct {
+    statements: std.ArrayList(Statement),
+    // NOTE: no token directly associated with Program root
+
+    pub fn tokenLiteral(self: Program) []const u8 {
+        if (self.statements.items.len > 0) {
+            return self.statements.items[0].tokenLiteral();
+        } else {
+            return "";
+        }
+    }
+
+    pub fn toString(self: Program, allocator: std.mem.Allocator) ![]u8 {
+        var builder = std.ArrayList(u8).init(allocator);
+        defer builder.deinit();
+
+        for (self.statements.items) |stmt| {
+            try builder.appendSlice(try stmt.toString(allocator));
+        }
+
+        return builder.toOwnedSlice();
+    }
+
+    pub fn deinit(self: *Program, allocator: std.mem.Allocator) void {
+        for (self.statements.items) |*stmt| {
+            stmt.deinit(allocator);
+        }
+
+        self.statements.deinit();
+    }
+};
+
+// statement: let <identifier> mean <expression>
+pub const LetStatement = struct {
+    token: token.Token,     // 'let' token
+    name: Identifier,       // variable name identifier
+    value: ?Expression,     // optional expression producing the value
+
+    pub fn tokenLiteral(self: LetStatement) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: LetStatement, allocator: std.mem.Allocator) ![]u8 {
+        var builder = std.ArrayList(u8).init(allocator);
+        defer builder.deinit();
+
+        try builder.appendSlice(self.tokenLiteral());
+        try builder.appendSlice(" ");
+        try builder.appendSlice(try self.name.toString(allocator));
+        try builder.appendSlice(" mean ");
+
+        if (self.value) |val| {
+            try builder.appendSlice(try val.toString(allocator));
+        }
+
+        try builder.appendSlice(".");
+
+        return builder.toOwnedSlice();
+    }
+
+    pub fn deinit(self: *Statement, allocator: std.mem.Allocator) void {
+        self.name.deinit(allocator);
+
+        if (self.value) |*val| {
+            val.deinit(allocator);
+        }
+    }
+};
+
+// statement: for <identifier> in <expression>: <block_statement>
+pub const ForStatement = struct {
+    token = token.Token,        // 'for' token
+    variable: Identifier,       // loop variable
+    collection: Expression,     // expression evaluating to the list/iterable
+    body: BlockStatement,       // statements inside the loop
+
+    pub fn tokenLiteral(self: ForStatement) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: ForStatement, allocator: std.mem.Allocator) ![]u8 {
+        var builder = std.ArrayList(u8).init(allocator);
+        defer builder.deinit();
+
+        try builder.appendSlice(self.tokenLiteral());
+        try builder.appendSlice(" ");
+        try builder.appendSlice(try self.variable.toString(allocator));
+        try builder.appendSlice(" in ");
+        try builder.appendSlice(try self.collection.toString(allocator));
+        try builder.appendSlice(": ");
+        try builder.appendSlice(try self.body.toString(allocator));
+
+        return builder.toOwnedSlice();
+    }
+
+    pub fn deinit(self: *ForStatement, allocator: std.mem.Allocator) void {
+        self.variable.deinit(allocator);
+        self.collection.deinit(allocator);
+        self.body.deinit(allocator);
+    }
+};
+
+pub const PrintStatement = struct {
+    token: token.Token,     // 'print' token
+    argument: Expression,   // expression to print
+
+    pub fn tokenLiteral(self: PrintStatement) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: PrintStatement,  allocator: std.mem.Allocator) ![]u8 {
+        var builder = std.ArrayList(u8).init(allocator);
+        defer builder.deinit();
+
+        try builder.appendSlice(self.tokenLiteral());
+        try builder.appendSlice(" ");
+        try builder.appendSlice(try self.argument.toString(allocator));
+        try builder.appendSlice(".");
+
+        return builder.toOwnedSlice();
+    }
+
+    pub fn deinit(self: *PrintStatement, allocator: std.mem.Allocator) void {
+        self.argument.deinit(allocator);
+    }
+};
