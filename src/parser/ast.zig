@@ -150,7 +150,7 @@ pub const LetStatement = struct {
     value: ?Expression,     // optional expression producing the value
 
     pub fn tokenLiteral(self: LetStatement) []const u8 {
-        return self.token.literal;
+        return self.token.literal; 
     }
 
     pub fn toString(self: LetStatement, allocator: std.mem.Allocator) ![]u8 {
@@ -237,3 +237,55 @@ pub const PrintStatement = struct {
         self.argument.deinit(allocator);
     }
 };
+
+// statement wrapper for expressions used as statements
+pub const ExpressionStatement = struct {
+    token: token.Token,     // first token of the expression
+    expression: Expression,
+
+    pub fn tokenLiteral(self: ExpressionStatement) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: ExpressionStatement, allocator: std.mem.Allocator) ![]u8 {
+        return self.expression.toString(allocator);
+    }
+
+    pub fn deinit(self: *ExpressionStatement, allocator: std.mem.Allocator) void {
+        self.expression.deinit(allocator);
+    }
+};
+
+pub const BlockStatement = struct {
+    token: token.Token,     // token that starts the block
+    statements: std.ArrayList(Statement),
+
+    pub fn tokenLiteral(self: BlockStatement) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: BlockStatement, allocator: std.mem.Allocator) ![]u8 {
+        var builder = std.ArrayList(u8).init(allocator);
+
+        defer builder.deinit();
+
+        try builder.appendSlice("{ ");  // Visual representation
+        for (self.statements.items) |stmt| {
+            try builder.appendSlice(try stmt.toString(allocator));
+            try builder.appendSlice(" ");
+        }
+        try builder.appendSlice("}");
+
+        return builder.toOwnedSlice();
+    }
+
+    pub fn deinit(self: *BlockStatement, allocator: std.mem.Allocator) void {
+        for (self.statements.items) |*stmt| {
+            stmt.deinit(allocator);
+        }
+
+        self.statements.deinit();
+    }
+};
+
+// expression nodes
