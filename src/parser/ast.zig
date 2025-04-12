@@ -346,7 +346,7 @@ pub const ListLiteral = struct {
 
         try builder.appendSlice("list ");
 
-        for (self.elements.item) |elem, i| {
+        for (self.elements.item, 0..) |elem, i| {
             if (i > 0) try builder.appendSlice(", ");
             try builder.appendSlice(try elem.toString(allocator));
         }
