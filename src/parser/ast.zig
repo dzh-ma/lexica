@@ -289,3 +289,76 @@ pub const BlockStatement = struct {
 };
 
 // expression nodes
+
+// expression: identifier (variable name)
+pub const Identifier = struct {
+    token: token.Token,    // .Ident token
+    value: []const u8,      // name of the identifier
+
+    pub fn tokenLiteral(self: Identifier) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: Identifier, allocator: std.mem.Allocator) ![]u8 {
+        _ = allocator;
+        return std.fmt.allocPrint(allocator, "{s}", .{ self.value });       // copy value for safety
+    }
+
+    // no heap allocations directly
+    pub fn deinit(self: *Identifier, allocator: std.mem.Allocator) void {
+        _ = self;
+        _ = allocator;
+    }
+};
+
+// expression: integer literal
+pub const IntegerLiteral = struct {
+    token: token.Token,    // .Int token
+    value: i64,             // store the parsed integer value
+
+    pub fn tokenLiteral(self: IntegerLiteral) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: IntegerLiteral, allocator: std.mem.Allocator) ![]u8 {
+        return std.fmt.allocPrint(allocator, "{s}", .{ self.value });       // copy value for safety
+    }
+
+    // no heap allocations directly
+    pub fn deinit(self: *IntegerLiteral, allocator: std.mem.Allocator) void {
+        _ = self;
+        _ = allocator;
+    }
+};
+
+// expression: list item1, item2, ...
+pub const ListLiteral = struct {
+    token: token.Token,     // list token
+    elements: std.ArrayList(Expression),        // lost of expressions for elements
+
+    pub fn tokenLiteral(self: ListLiteral) []const u8 {
+        return self.token.literal;
+    }
+
+    pub fn toString(self: ListLiteral, allocator: std.mem.Allocator) ![]u8 {
+        var builder = std.ArrayList(u8).init(allocator);
+        defer builder.deinit();
+
+        try builder.appendSlice("list ");
+
+        for (self.elements.item) |elem, i| {
+            if (i > 0) try builder.appendSlice(", ");
+            try builder.appendSlice(try elem.toString(allocator));
+        }
+
+        return builder.toOwnedSlice();
+    }
+
+    // no heap allocations directly
+    pub fn deinit(self: *ListLiteral, allocator: std.mem.Allocator) void {
+        for (self.elements.items) |*elem| {
+            elem.deinit(allocator);
+        }
+        self.elements.deinit();
+    }
+};
