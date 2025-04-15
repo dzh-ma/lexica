@@ -168,11 +168,134 @@ pub const Parser = struct {
         self.nextToken();   // consume mean token, move to expression start
 
         // TODO: parse the expression
-        // stmmt.value = try self.parseExpression(Precedence.LOWEST);
+        // stmt.value = try self.parseExpression(Precedence.LOWEST);
 
         // expect . at the end of the statement for now
         if (!try self.expectPeek(.Period)) return null;
 
         return Statement{ .let_statement = stmt };
     }
+
+    // parses: print <expression>
+    fn parsePrintStatement(self: *Parser) !?Statement {
+        var stmt = PrintStatement{
+            .token = self.curToken,
+            .argument = undefined
+        };
+
+        self.nextToken();   // consume print
+
+        // TODO: parse the expression
+        // stmt.argument = try self.parseExpression(Precedence.LOWEST);
+
+        while (!self.curTokenIs(.Period) and !self.curTokenIs(.Eof)) {
+            self.nextToken();
+        }
+
+        // expect . at the end
+        if (!self.curTokenIs(.Period)) {
+            // TODO: Add specific error for missing period
+            return null;
+        }
+
+        // self.nextToken();    // consume . if needed by expression parsing logic
+
+        return Statement{ .print_statement = stmt };
+    }
+
+    // parses: for <ident> in <expression>: <block_statement>
+    fn parseForStatement(self: *Parser) !?Statement {
+        var stmt = ForStatement{
+            .token = self.curToken,     // for token
+            .variable = undefined,
+            .collection = undefined,
+            .body = undefined,
+        };
+        
+        // expect identifier after for
+        if (!try self.expectPeek(.Ident)) return null;
+
+        stmt.variable = Identifier { .token = self.curToken, .value = self.curToken.literal };
+
+        // expect in after identifier
+        if (!try self.expectPeek(.KeywordIn)) return null;
+
+        self.nextToken();   // consume in, move to collection expression
+
+        // TODO: parse collection expression
+        // stmt.collection = try self.parseExpression(Precedence.LOWEST);
+
+        // skip until colon for now
+        while (!self.curTokenIs(.Colon) and !self.curTokenIs(.Eof)) {
+            self.nextToken();
+        }
+
+        // expect : after collection expression
+        if (!self.curToken(.Colon)) {
+            // TODO: add specific error for missing colon
+            return null;
+        }
+
+        const colonToken = self.curToken;   // save : token for BlockStatement
+
+        self.nextToken();
+
+        // TODO: parse the block statement body
+        // stmt.body = try self.parseBlockStatement();
+
+        // temporary placeholder for body
+        stmt.body = BlockStatement {
+            .token = colonToken,
+            .statements = std.ArrayList(Statement).init(self.allocator),    // empty block
+        };
+
+        return Statement{ .for_statement = stmt };
+    }
+
+    // parses a block of statements
+    // TODO: implement block parsing properly (needs ending condition)
+    // fn parseBlockStatement(self: *Parser) !BlockStatement { ... }
+
+    // parses an expression statement
+    // TODO: parse the expression
+    fn parseExpressionStatement(self: *Parser) !?Statement {
+        // placeholder - just consumes tokens until a period for now
+        const startToken = self.curToken;
+        std.debug.print("Parsing expression statement starting with: {s}\n", .{ self.curToken.literal });
+
+        // TODO: implement real expression parsing
+        // const expr = try self.parseExpression(Precedence.LOWEST);
+
+        // skip until period or eof as a temporary measure
+        while (!self.curTokenIs(.Period) and !self.curTokenIs(.Eof)) {
+            self.nextToken();
+        }
+
+        // create a dummy statement for now
+        // NOTE: expr would be used in a real implementation
+        var expr_placeholder = Expression{ .identifier = Identifier{ .token = startToken, .value = startToken.literal } };
+        var stmt = ExpressionStatement{
+            .token = startToken,
+            .expression = expr_placeholder,
+        };
+
+        // check if the statement ends with a period
+        if (self.peekTokenIs(.Period)) {
+            self.nextToken();
+        }
+
+        return Statement{ .expression_statement = stmt };
+    }
+
+    // expression parsing (placeholders)
+    // TODO: implement Pratt parser or precedence climbing for expressions
+    // pub fn parseExpression(self: *Parser, precedence: Precedence) !Expression { ... }
+    // fn parseIdentifier(self: *Parser) !Expression { ... }
+    // fn parseIntegerLiteral(self: *Parser) !Expression { ... }
+    // fn parseListLiteral(self: *Parser) !Expression { ... }
+    // fn parsePrefixExpression(self: *Parser) !Expression { ... }
+    // fn parseInfixExpression(self: *Parser, left: Expression) !Expression { ... }
 };
+
+// TODO: define Precedence enum for expression parsing later
+// const Precedence = enum(u8) { LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX };
